@@ -31,6 +31,8 @@ app.use(
       res.setHeader('x-request-id', id);
       return id;
     },
+    // The address Express resolved with TRUST_PROXY, to compare with your real IP in the host's logs.
+    customProps: (req) => ({ clientIp: req.ip, protocol: req.protocol }),
     autoLogging: {
       ignore: (req) => req.url.startsWith('/api/v1/health') || req.url === '/api/v1/ready',
     },

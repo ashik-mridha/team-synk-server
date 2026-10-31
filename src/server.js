@@ -19,6 +19,8 @@ async function start() {
       clientOrigins: env.CLIENT_ORIGINS,
       betterAuthUrl: env.BETTER_AUTH_URL,
       cookieSameSite: env.COOKIE_SAME_SITE,
+      cookieSecure: isProd || env.COOKIE_SAME_SITE === 'none',
+      socketCorsOrigins: env.CLIENT_ORIGINS,
       cookieDomain: env.COOKIE_DOMAIN ?? null,
       trustProxy: env.TRUST_PROXY,
       transactions: env.MONGODB_USE_TRANSACTIONS,
