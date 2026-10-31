@@ -3,6 +3,7 @@ import { betterAuth } from 'better-auth';
 import { APIError, createAuthMiddleware } from 'better-auth/api';
 import { MongoClient } from 'mongodb';
 import { nameSchema, passwordSchema } from '../validators/auth.validators.js';
+import { allowedOrigins } from './cors.js';
 import { GlobalRole } from './constants.js';
 import { env, isProd } from './env.js';
 
@@ -41,7 +42,7 @@ export const auth = betterAuth({
   appName: 'TeamSync',
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
-  trustedOrigins: [env.CLIENT_URL],
+  trustedOrigins: allowedOrigins,
   database: mongodbAdapter(authDb, env.MONGODB_USE_TRANSACTIONS ? { client } : undefined),
   user: {
     additionalFields: {
@@ -84,6 +85,10 @@ export const auth = betterAuth({
     ipAddress: { ipAddressHeaders: [CLIENT_IP_HEADER] },
     useSecureCookies: isProd || env.COOKIE_SAME_SITE === 'none',
     defaultCookieAttributes: { sameSite: env.COOKIE_SAME_SITE },
+    // App and API on sibling subdomains (app.x.com / api.x.com): share the cookie on the parent domain.
+    ...(env.COOKIE_DOMAIN && {
+      crossSubDomainCookies: { enabled: true, domain: env.COOKIE_DOMAIN },
+    }),
   },
   hooks: { before: validateInput },
 });

@@ -1,8 +1,9 @@
 import mongoose from 'mongoose';
 import { Server } from 'socket.io';
 import { SocketEvent } from '../config/constants.js';
-import { env } from '../config/env.js';
+import { allowedOrigins } from '../config/cors.js';
 import { Project, Workspace } from '../models/index.js';
+import { consumeSocketTicket } from '../services/socket-ticket.service.js';
 import { findMember } from '../services/workspace.service.js';
 import { logger } from '../utils/logger.js';
 import { getSession } from '../utils/session.js';
@@ -24,13 +25,22 @@ function broadcastPresence(io, projectId) {
 
 export function initSockets(httpServer) {
   const io = new Server(httpServer, {
-    cors: { origin: env.CLIENT_URL, credentials: true },
+    cors: { origin: allowedOrigins, credentials: true },
   });
   setIo(io);
 
-  // Identity comes only from the Better Auth session cookie, never from client-sent ids.
+  // Identity comes only from the server: a one-time ticket issued to an authenticated REST caller
+  // (works across sites), or the Better Auth session cookie when it reaches the socket host.
+  // A user id sent by the client is never read.
   io.use(async (socket, next) => {
     try {
+      const ticket = socket.handshake.auth?.ticket;
+      if (ticket) {
+        const user = await consumeSocketTicket(ticket);
+        if (!user) return next(new Error('UNAUTHORIZED'));
+        socket.data.user = user;
+        return next();
+      }
       const result = await getSession(socket.handshake.headers);
       if (!result) return next(new Error('UNAUTHORIZED'));
       const { id, name, image } = result.user;

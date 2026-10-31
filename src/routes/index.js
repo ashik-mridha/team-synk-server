@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as notifications from '../controllers/notification.controller.js';
 import { getReady } from '../controllers/health.controller.js';
+import { createSocketTicket } from '../controllers/socket.controller.js';
 import { getMe } from '../controllers/user.controller.js';
 import { authenticate } from '../middlewares/authenticate.js';
 import { validate } from '../middlewares/validate.js';
@@ -19,6 +20,7 @@ apiRouter.get('/invites/:token', notifications.previewInvite);
 // Everything below requires a valid Better Auth session.
 apiRouter.use(authenticate);
 apiRouter.get('/me', getMe);
+apiRouter.post('/socket-ticket', createSocketTicket);
 apiRouter.post('/invites/:token/accept', notifications.acceptInvite);
 apiRouter.get('/notifications', validate(notificationsQuerySchema, 'query'), notifications.list);
 apiRouter.post('/notifications/read', validate(markReadSchema), notifications.markRead);

@@ -41,7 +41,8 @@
     "format": "prettier --write .",
     "set-role": "node scripts/set-role.js",
     "migrate-db": "node scripts/migrate-db.js",
-    "seed": "node scripts/seed.js"
+    "seed": "node scripts/seed.js",
+    "check:deploy": "node scripts/check-deploy.js"
   },
   "type": "module"
 }

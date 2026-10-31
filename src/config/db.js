@@ -5,12 +5,20 @@ import { authDb } from './auth.js';
 import { AUTH_COLLECTIONS, GlobalRole } from './constants.js';
 import { env } from './env.js';
 
+/** True when the connection string names a database (...mongodb.net/team-sync?...). */
+const uriNamesDatabase = (uri) => /^mongodb(\+srv)?:\/\/[^/]+\/[^/?]+/.test(uri);
+
 export async function connectDb() {
+  if (!uriNamesDatabase(env.MONGODB_URI)) {
+    logger.warn(
+      `MONGODB_URI has no database name; using DB_NAME="${env.DB_NAME}" explicitly. Add /${env.DB_NAME} to the URI too.`,
+    );
+  }
   mongoose.connection.on('disconnected', () => logger.warn('MongoDB disconnected'));
   // dbName is explicit so Mongoose never falls back to the driver default ("test").
   await mongoose.connect(env.MONGODB_URI, {
     dbName: env.DB_NAME,
-    serverSelectionTimeoutMS: 5000,
+    serverSelectionTimeoutMS: 10_000,
   });
   logger.info(
     { mongoose: mongoose.connection.name, betterAuth: authDb.databaseName },

@@ -1,3 +1,5 @@
+# Render Blueprint for the TeamSync API (Express + Socket.io, long-running, NOT serverless).
+# Dashboard: New > Blueprint, pick this repo. Variables marked `sync: false` are asked for once.
 services:
   - type: web
     name: teamsync-server
@@ -6,23 +8,29 @@ services:
     buildCommand: npm ci
     startCommand: npm start
     healthCheckPath: /api/v1/health
+    autoDeploy: true
     envVars:
+      - key: NODE_VERSION
+        value: '22'
       - key: NODE_ENV
         value: production
+      # Render's proxy (1) + the Vercel rewrite in front of it (2). Use 1 if browsers call the API directly.
       - key: TRUST_PROXY
-        value: '1'
+        value: '2'
       - key: DB_NAME
         value: team-sync
       - key: MONGODB_USE_TRANSACTIONS
         value: 'true'
+      # The browser reaches the API through the web app's own domain (Next.js rewrites), so the
+      # session cookie is first-party. Use `none` only when browsers call this URL directly.
       - key: COOKIE_SAME_SITE
-        value: none
+        value: lax
       - key: MONGODB_URI
-        sync: false
+        sync: false # Atlas string that includes /team-sync
       - key: CLIENT_URL
-        sync: false
+        sync: false # https://team-synk-omega.vercel.app (comma separate extra origins)
       - key: BETTER_AUTH_URL
-        sync: false
+        sync: false # this service's public URL, https://<name>.onrender.com
       - key: BETTER_AUTH_SECRET
         generateValue: true
       - key: SUPER_ADMIN_EMAIL

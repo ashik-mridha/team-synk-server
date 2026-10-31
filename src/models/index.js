@@ -141,6 +141,16 @@ const inviteSchema = new Schema(
 );
 inviteSchema.index({ workspace: 1, status: 1 });
 
+/**
+ * Single-use, 30-second tickets that let the browser authenticate a Socket.io handshake when the
+ * session cookie is not sent to the socket host (app and API on different sites).
+ */
+const socketTicketSchema = new Schema({
+  tokenHash: { type: String, required: true, unique: true },
+  user: { type: String, required: true },
+  expiresAt: { type: Date, required: true, expires: 0 },
+});
+
 /** Saved board/list views (filters + grouping) per user. */
 const viewSchema = new Schema(
   {
@@ -176,6 +186,7 @@ export const Notification = mongoose.model('Notification', notificationSchema);
 export const Invite = mongoose.model('Invite', inviteSchema);
 export const View = mongoose.model('View', viewSchema);
 export const Cycle = mongoose.model('Cycle', cycleSchema);
+export const SocketTicket = mongoose.model('SocketTicket', socketTicketSchema);
 
 /** Read-only view of Better Auth's `user` collection (Better Auth owns writes). */
 export const AuthUser = mongoose.model(
@@ -194,4 +205,5 @@ export const appModels = [
   Invite,
   View,
   Cycle,
+  SocketTicket,
 ];

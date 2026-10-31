@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import { pinoHttp } from 'pino-http';
 import { toNodeHandler } from 'better-auth/node';
 import { auth, CLIENT_IP_HEADER } from './config/auth.js';
+import { corsOptions } from './config/cors.js';
 import { env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import { apiLimiter } from './middlewares/rateLimiter.js';
@@ -16,8 +17,10 @@ export const app = express();
 
 app.disable('x-powered-by');
 app.set('trust proxy', env.TRUST_PROXY);
-app.use(helmet());
-app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
+// CORP must allow cross-origin reads or helmet's default would fight the CORS policy below.
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+// CORS is first, so every response (auth, API, 404, errors, preflight) carries its headers.
+app.use(cors(corsOptions));
 app.use(compression());
 // Every request gets an id (echoed in x-request-id and in 500 responses) so a user report can be traced.
 app.use(
