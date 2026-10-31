@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: teamsync-server
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: '1'
+      - key: DB_NAME
+        value: team-sync
+      - key: MONGODB_USE_TRANSACTIONS
+        value: 'true'
+      - key: COOKIE_SAME_SITE
+        value: none
+      - key: MONGODB_URI
+        sync: false
+      - key: CLIENT_URL
+        sync: false
+      - key: BETTER_AUTH_URL
+        sync: false
+      - key: BETTER_AUTH_SECRET
+        generateValue: true
+      - key: SUPER_ADMIN_EMAIL
+        sync: false

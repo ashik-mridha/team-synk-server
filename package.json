@@ -30,6 +30,9 @@
     "vitest": "^4.1.12"
   },
   "main": "src/server.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
