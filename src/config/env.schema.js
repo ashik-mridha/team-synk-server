@@ -80,11 +80,30 @@ const envSchema = z
     }
   });
 
+const ENUM_KEYS = ['NODE_ENV', 'COOKIE_SAME_SITE', 'MONGODB_USE_TRANSACTIONS'];
+
+/**
+ * Hosting dashboards make it easy to paste `"production"` (with quotes) or a trailing space, which
+ * would otherwise crash the server at start-up. Trim every value, drop one pair of wrapping quotes,
+ * and lowercase the fixed-choice settings.
+ */
+function normalizeEnv(source) {
+  const out = {};
+  for (const [key, value] of Object.entries(source)) {
+    if (typeof value !== 'string') continue;
+    let text = value.trim();
+    if (/^(["']).*\1$/s.test(text)) text = text.slice(1, -1).trim();
+    out[key] = ENUM_KEYS.includes(key) ? text.toLowerCase() : text;
+  }
+  return out;
+}
+
 /**
  * Validates an environment object. Returns `{ ok: true, data }` or `{ ok: false, errors }` where
  * every error names the variable, so a failed deploy log says exactly what to set.
  */
-export function parseEnv(source) {
+export function parseEnv(rawSource) {
+  const source = normalizeEnv(rawSource);
   const result = envSchema.safeParse(source);
   if (result.success) {
     const { CLIENT_URL: origins, ...rest } = result.data;
@@ -104,7 +123,12 @@ export function parseEnv(source) {
   const errors = result.error.issues.map((issue) => {
     const name = String(issue.path[0] ?? 'environment');
     const missing = issue.code === 'invalid_type' && source[name] === undefined;
-    return `${name}: ${missing ? 'is not set' : issue.message}`;
+    // Enum values are not secret; show what was received so a stray quote or typo is obvious.
+    const received =
+      ENUM_KEYS.includes(name) && typeof source[name] === 'string'
+        ? ` (received "${source[name].slice(0, 30)}")`
+        : '';
+    return `${name}: ${missing ? 'is not set' : issue.message}${received}`;
   });
   return { ok: false, errors };
 }

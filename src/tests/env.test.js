@@ -67,3 +67,32 @@ describe('parseEnv', () => {
     expect(data.COOKIE_DOMAIN).toBeUndefined();
   });
 });
+
+describe('parseEnv tolerance for dashboard typos', () => {
+  const valid = {
+    MONGODB_URI: 'mongodb://127.0.0.1/team-sync',
+    BETTER_AUTH_SECRET: 'x'.repeat(40),
+    CLIENT_URL: 'https://app.example.com',
+  };
+
+  it('accepts quoted, padded and mixed-case values', () => {
+    const { ok, data } = parseEnv({
+      ...valid,
+      NODE_ENV: ' "Production" ',
+      COOKIE_SAME_SITE: "'None'",
+      BETTER_AUTH_URL: '"https://api.example.com/"',
+    });
+
+    expect(ok).toBe(true);
+    expect(data.NODE_ENV).toBe('production');
+    expect(data.COOKIE_SAME_SITE).toBe('none');
+    expect(data.BETTER_AUTH_URL).toBe('https://api.example.com');
+  });
+
+  it('shows what a bad fixed-choice value was, but never other values', () => {
+    const { errors } = parseEnv({ ...valid, NODE_ENV: 'prod' });
+
+    expect(errors.join()).toMatch(/NODE_ENV: .*\(received "prod"\)/);
+    expect(errors.join()).not.toContain('x'.repeat(40));
+  });
+});

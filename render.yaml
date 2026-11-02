@@ -1,4 +1,5 @@
 # Render Blueprint for the TeamSync API (Express + Socket.io, long-running, NOT serverless).
+# Node version comes from package.json "engines" (Render reads it when NODE_VERSION is unset).
 # Dashboard: New > Blueprint, pick this repo. Variables marked `sync: false` are asked for once.
 services:
   - type: web
@@ -10,8 +11,6 @@ services:
     healthCheckPath: /api/v1/health
     autoDeploy: true
     envVars:
-      - key: NODE_VERSION
-        value: '22'
       - key: NODE_ENV
         value: production
       # Render's proxy (1) + the Vercel rewrite in front of it (2). Use 1 if browsers call the API directly.
